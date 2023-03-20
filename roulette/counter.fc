@@ -1,9 +1,9 @@
-(int, int, int, int, cell) load_data() inline {
+(int, int, int, int, cell, cell) load_data() inline {
     slice ds = get_data().begin_parse();
-    return (ds~load_uint(256), ds~load_uint(32), ds~load_int(32), ds~load_uint(64), ds~load_dict());               ;; read a 64 bit unsigned int from the slice and return it
+    return (ds~load_uint(256), ds~load_uint(32), ds~load_int(32), ds~load_uint(64), ds~load_dict(), ds~load_ref());               ;; read a 64 bit unsigned int from the slice and return it
 }
 
-() save_data(int public_key, int counter, int timestamp, int game_id, cell participants) impure inline {
+() save_data(int public_key, int counter, int timestamp, int game_id, cell participants, cell last_winner) impure inline {
     set_data(
             begin_cell()
                     .store_uint(public_key, 256)
@@ -11,12 +11,12 @@
                     .store_uint(timestamp, 32)
                     .store_uint(game_id, 64)
                     .store_dict(participants)
+                    .store_ref(last_winner)
                     .end_cell()
     );
 }
 
 () recv_internal(int msg_value, cell msg, slice in_msg_body) impure {
-    ~dump(msg_value);
     throw_if(120, msg_value < 1000000000);
     throw_if(121, msg_value > 500000000000);
     slice cs = msg.begin_parse();
@@ -27,9 +27,9 @@
 
     slice sender_address = cs~load_msg_addr();
     slice signature = in_msg_body~load_bits(512);
-    int op = in_msg_body~load_uint(32);
-    (int public_key, int counter, int timestamp, int game_id, cell participants) = load_data();
+    (int public_key, int counter, int timestamp, int game_id, cell participants, cell last_winner) = load_data();
     throw_unless(122, check_signature(slice_hash(in_msg_body), signature, public_key));
+    int op = in_msg_body~load_uint(32);
 
     if(op == 0) {
         int tx_game_id = in_msg_body~load_uint(64);
@@ -42,9 +42,6 @@
 
         int user_id = in_msg_body~load_uint(32);
         slice user_address = in_msg_body~load_msg_addr();
-        if(counter >= 2) {
-            throw_if(124, now() - timestamp > 60);
-        }
 
         (slice participant, int flag) = participants~udict_delete_get?(64, user_id);
         if(flag == -1) {
@@ -71,10 +68,14 @@
 
                     counter += 1;
                 }
-        save_data(public_key, counter, timestamp, game_id, participants);
+        save_data(public_key, counter, timestamp, game_id, participants, last_winner);
     }
             else {
                 if(op == 1) {
+                    throw_if(125, counter < 2);
+                    throw_if(126, now() - timestamp < 60);
+                    int tx_game_id = in_msg_body~load_uint(64);
+                    throw_unless(127, game_id == tx_game_id);
                     int commission = in_msg_body~load_uint(16);
                     int sum = 0;
                     int key = -1;
@@ -99,7 +100,6 @@
                     key = -1;
 
                     do {
-                        throw_if(125, counter < 2);
                         (key, slice participant, int f) = participants.udict_get_next?(64, key);
                         int amount = participant~load_coins();
                         int old_sequence = sequence;
@@ -129,11 +129,23 @@
                                     .end_cell();
 
                             send_raw_message(log_message, 128);
+
+                            last_winner = begin_cell()
+                                    .store_coins(prize)
+                                    .store_slice(winner_address)
+                                    .store_uint(x, 256)
+                                    .store_uint(game_id, 64)
+                                    .end_cell();
                             f = 0;
                         }
                     } until (~ f);
 
-                    save_data(public_key, 0, 0, 0, new_dict());
+                    save_data(public_key, 0, 0, 0, new_dict(), last_winner);
                 }
             }
+}
+
+cell get_last_winner() method_id {
+    (int public_key, int counter, int timestamp, int game_id, cell participants, cell last_winner) = load_data();
+    return last_winner;
 }
