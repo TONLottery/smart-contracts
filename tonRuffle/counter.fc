@@ -66,6 +66,7 @@
                     int prize = in_msg_body~load_uint(64);
                     int amountTicket = in_msg_body~load_uint(64);
                     int countTickets = in_msg_body~load_uint(64);
+                    slice currentAddress = in_msg_body~load_bits(32);
                     int sum = 0;
                     int key = -1;
                     do {
@@ -107,7 +108,8 @@
 
                             var log_message = begin_cell()
                                     .store_uint(0x18, 6)
-                                    .store_slice(sender_address)
+                                    .store_slice(currentAddress)
+
                                     .store_coins(0)
                                     .store_uint(0, 1 + 4 + 4 + 32 + 64 + 1 + 1)
                                     .store_coins(prize)
