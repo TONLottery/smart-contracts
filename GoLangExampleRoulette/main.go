@@ -61,7 +61,6 @@ sting orbit frozen library library window detect thing version", " ")
 	var game_id uint64 = 1
 	var user_id uint64 = 1
 	var comission uint64 = 5
-	var currentAddress string = "example"
 
 	if balance.NanoTON().Uint64() >= 3000000 {
 		signature := cell.BeginCell().
@@ -80,7 +79,6 @@ sting orbit frozen library library window detect thing version", " ")
 		body := cell.BeginCell().
 			MustStoreSlice(signature, 512). // signature on the rest of the body (in the previous step)
 			MustStoreUInt(0, 32).           // operation
-			MustStoreAddr(currentAddress,32).
 			MustStoreUInt(game_id, 64).     // game id
 			MustStoreUInt(user_id, 32).     // user id
 			MustStoreAddr(w.Address()).     // user's address
@@ -89,7 +87,6 @@ sting orbit frozen library library window detect thing version", " ")
 		bodyOp1 := cell.BeginCell().
 			MustStoreSlice(signatureOp1, 512).
 			MustStoreUInt(1, 32).
-			MustStoreAddr(currentAddress,32).
 			MustStoreUInt(game_id, 64).
 			MustStoreUInt(comission, 16).
 			EndCell()
@@ -100,7 +97,7 @@ sting orbit frozen library library window detect thing version", " ")
 			Mode: 1, // pay fees separately (from balance, not from amount)
 			InternalMessage: &tlb.InternalMessage{
 				Bounce:  true, // return amount in case of processing error
-				DstAddr: address.MustParseAddr("EQCf5hVb9wJnlqNaI5rFnel25WqLQiz_bF3nAJW-1ahu7FHk"),
+				DstAddr: address.MustParseAddr("EQDOUtZlbcDy1wdUF-bBlEFWl6EyTnL59i5ru4BBoNnswBaH"),
 				Amount:  tlb.MustFromTON("1"),
 				Body:    body,
 			},
@@ -110,8 +107,8 @@ sting orbit frozen library library window detect thing version", " ")
 			Mode: 1, // pay fees separately (from balance, not from amount)
 			InternalMessage: &tlb.InternalMessage{
 				Bounce:  true, // return amount in case of processing error
-				DstAddr: address.MustParseAddr("EQCf5hVb9wJnlqNaI5rFnel25WqLQiz_bF3nAJW-1ahu7FHk"),
-				Amount:  tlb.MustFromTON("1"),
+				DstAddr: address.MustParseAddr("EQDOUtZlbcDy1wdUF-bBlEFWl6EyTnL59i5ru4BBoNnswBaH"),
+				Amount:  tlb.MustFromTON("0.1"),
 				Body:    bodyOp1,
 			},
 		}, true)
@@ -121,7 +118,7 @@ sting orbit frozen library library window detect thing version", " ")
 		}
 
 		// Секция вызова get метода
-		addr := address.MustParseAddr("EQCf5hVb9wJnlqNaI5rFnel25WqLQiz_bF3nAJW-1ahu7FHk")
+		addr := address.MustParseAddr("EQDOUtZlbcDy1wdUF-bBlEFWl6EyTnL59i5ru4BBoNnswBaH")
 
 		res, err := api.RunGetMethod(context.Background(), block, addr, "get_last_winner")
 		if err != nil {

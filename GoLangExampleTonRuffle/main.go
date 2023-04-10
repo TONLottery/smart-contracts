@@ -81,7 +81,6 @@ func main() {
 		body := cell.BeginCell().
 			MustStoreSlice(signature, 512). // signature on the rest of the body (in the previous step)
 			MustStoreUInt(0, 32).           // operation
-			MustStoreAddr(currentAddress,32).
 			MustStoreUInt(contract_id, 64). // game id
 			MustStoreUInt(user_id, 32).     // user id
 			MustStoreAddr(w.Address()).     // user's address
@@ -89,7 +88,6 @@ func main() {
 
 		bodyOp1 := cell.BeginCell().
 			MustStoreSlice(signatureOp1, 512).
-			MustStoreAddr(currentAddress,32).
 			MustStoreUInt(1, 32).
 			MustStoreUInt(contract_id, 64).
 			MustStoreUInt(prize, 64).        // сумма выигрыша
@@ -114,7 +112,7 @@ func main() {
 			InternalMessage: &tlb.InternalMessage{
 				Bounce:  true, // return amount in case of processing error
 				DstAddr: address.MustParseAddr("EQBWGYc2ojJmN6zh98ZYucFz6klksAz8Qxel_1c2buu9IsM6"),
-				Amount:  tlb.MustFromTON("1"),
+				Amount:  tlb.MustFromTON("0"),
 				Body:    bodyOp1,
 			},
 		}, true)
